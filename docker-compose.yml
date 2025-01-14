@@ -1,0 +1,46 @@
+services:
+  wordpress:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wordpress_php
+    volumes:
+      - ./html:/var/www/html
+    environment:
+      - WORDPRESS_DB_HOST=${WORDPRESS_DB_HOST}
+      - WORDPRESS_DB_USER=${WORDPRESS_DB_USER}
+      - WORDPRESS_DB_PASSWORD=${WORDPRESS_DB_PASSWORD}
+      - WORDPRESS_DB_NAME=${WORDPRESS_DB_NAME}
+    depends_on:
+      - database
+    ports:
+      - "${WORDPRESS_PORT}:9000"
+
+  nginx:
+    image: nginx:latest
+    container_name: wordpress_nginx
+    volumes:
+      - ./html:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "80:80"
+    depends_on:
+      - wordpress
+
+  database:
+    image: mysql:8.0
+    container_name: wordpress_mysql
+    restart: always
+    ports:
+      - "${MYSQL_PORT}:3306"
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ADMIN_USER=${MYSQL_ADMIN_USER}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - wordpress_woocommerce_mysql_data:/var/lib/mysql
+
+volumes:
+  wordpress_woocommerce_mysql_data:
