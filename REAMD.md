@@ -4,6 +4,13 @@
 
 ## 創建步驟
 
+### 自動步驟
+
+```bash
+docker compose up -d
+```
+
+### 手動步驟
 1. 啟動 Docker 服務
 
     ```bash
