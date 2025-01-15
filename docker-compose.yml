@@ -42,5 +42,38 @@ services:
     volumes:
       - wordpress_woocommerce_mysql_data:/var/lib/mysql
 
+  influxdb:
+    image: influxdb:2.0
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - INFLUXDB_DB=k6
+      - INFLUXDB_ADMIN_USER=admin
+      - INFLUXDB_ADMIN_PASSWORD=admin123
+    volumes:
+      - wordpress_woocommerce_influxdb_data:/var/lib/influxdb2
+
+  k6:
+    image: grafana/k6
+    container_name: wordpress_k6
+    volumes:
+      - ./k6:/scripts
+    command: run /scripts/stress_test.js --out influxdb=http://influxdb:8086/k6
+    environment:
+      - K6_INFLUXDB_ORG=wordpress_commerce
+      - K6_INFLUXDB_BUCKET=grafana_k6
+      - K6_INFLUXDB_TOKEN=${K6_INFLUXDB_TOKEN}
+
+  grafana:
+    image: grafana/grafana
+    container_name: wordpress_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+
 volumes:
   wordpress_woocommerce_mysql_data:
+  wordpress_woocommerce_influxdb_data:
