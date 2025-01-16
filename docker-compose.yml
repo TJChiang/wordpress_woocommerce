@@ -43,42 +43,42 @@ services:
       - wordpress_woocommerce_mysql_data:/var/lib/mysql
 
   k6:
-    image: grafana/k6
+    build:
+      context: k6
+      dockerfile: Dockerfile
     container_name: wordpress_k6
     volumes:
       - ./k6/scripts/stress_test.js:/scripts/stress_test.js:ro
       - ./k6/logs:/logs
-    command: run /scripts/stress_test.js --address 0.0.0.0:6565 --out json=/logs/results.json
+    command: run /scripts/stress_test.js --out output-elasticsearch
     environment:
       - BASE_URL=http://nginx/
+      - K6_OUT=output-elasticsearch
+      - K6_ELASTICSEARCH_USER=elastic
+      - K6_ELASTICSEARCH_PASSWORD=pass
+      - K6_ELASTICSEARCH_URL=http://elasticsearch:9200
     depends_on:
       - wordpress
-      - logstash
+      - elasticsearch
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
+      - ELASTIC_PASSWORD=pass
     ports:
       - "9200:9200"
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
 
-  logstash:
-    image: docker.elastic.co/logstash/logstash:8.10.2
-    container_name: logstash
-    volumes:
-      - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
-    depends_on:
-      - elasticsearch
-    ports:
-      - "5044:5044"
-
   kibana:
     image: docker.elastic.co/kibana/kibana:8.10.2
     environment:
+      - SERVERNAME=kibana
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana
+      - ELASTICSEARCH_PASSWORD=pass
     depends_on:
       - elasticsearch
     ports:
