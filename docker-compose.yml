@@ -42,6 +42,50 @@ services:
     volumes:
       - wordpress_woocommerce_mysql_data:/var/lib/mysql
 
+  k6:
+    image: grafana/k6
+    container_name: wordpress_k6
+    volumes:
+      - ./k6/scripts/stress_test.js:/scripts/stress_test.js:ro
+      - ./k6/logs:/logs
+    command: run /scripts/stress_test.js --address 0.0.0.0:6565 --out json=/logs/results.json
+    environment:
+      - BASE_URL=http://nginx/
+    depends_on:
+      - wordpress
+      - logstash
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.10.2
+    container_name: logstash
+    volumes:
+      - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+    depends_on:
+      - elasticsearch
+    ports:
+      - "5044:5044"
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.10.2
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    ports:
+      - "5601:5601"
+    volumes:
+      - kibana_data:/usr/share/kibana/data
+
   prometheus:
     image: prom/prometheus
     container_name: prometheus
@@ -52,22 +96,6 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--web.enable-remote-write-receiver'
-
-  k6:
-    image: grafana/k6
-    container_name: wordpress_k6
-    ports:
-      - "6565:6565"
-    volumes:
-      - ./k6:/scripts
-    command: run /scripts/stress_test.js --address 0.0.0.0:6565 --out experimental-prometheus-rw
-    environment:
-      # - K6_PROMETHEUS_PUSH_GATEWAY_URL=http://prometheus:9091/metrics
-      - K6_PROMETHEUS_RW_SERVER_URL=http://prometheus:9090/api/v1/write
-      - BASE_URL=http://nginx/
-    depends_on:
-      - prometheus
-      - wordpress
 
   grafana:
     image: grafana/grafana
@@ -82,5 +110,7 @@ services:
 
 volumes:
   wordpress_woocommerce_mysql_data:
+  elasticsearch_data:
+  kibana_data:
   prometheus_data:
   grafana_data:
