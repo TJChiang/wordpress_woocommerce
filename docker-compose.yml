@@ -43,14 +43,27 @@ services:
       - wordpress_woocommerce_mysql_data:/var/lib/mysql
 
   k6:
-    build:
-      context: k6
-      dockerfile: Dockerfile
+    image: grafana/k6
     container_name: wordpress_k6
     volumes:
       - ./k6/scripts/stress_test.js:/scripts/stress_test.js:ro
       - ./k6/logs:/logs
-    command: run /scripts/stress_test.js --out output-elasticsearch
+    command: run /scripts/stress_test.js
+    environment:
+      - BASE_URL=http://nginx/
+    depends_on:
+      - wordpress
+
+  k6_elk:
+    build:
+      context: k6
+      dockerfile: Dockerfile
+    container_name: wordpress_k6_elk
+    volumes:
+      - ./k6/scripts/stress_test.js:/scripts/stress_test.js:ro
+      - ./k6/logs:/logs
+    # command: run /scripts/stress_test.js --summary-export=/logs/summary.json --out output-elasticsearch
+    command: run /scripts/stress_test.js --summary-export=/logs/summary.json --out json=/logs/output.json
     environment:
       - BASE_URL=http://nginx/
       - K6_OUT=output-elasticsearch
