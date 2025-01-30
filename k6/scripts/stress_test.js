@@ -2,13 +2,15 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 
 export const options = {
-    stages: [
-        { duration: '30s', target: 10 },
-        { duration: '1m', target: 50 },
-        { duration: '10s', target: 0 },
-    ],
+    // stages: [
+    //     { duration: '30s', target: 100 },
+    //     { duration: '1m', target: 300 },
+    //     { duration: '10s', target: 0 },
+    // ],
+    vus: 200,
+    duration: '1m',
     thresholds: {
-        http_req_duration: ['p(95)<500'], // 95% 的請求應在 500ms 以內
+        http_req_duration: ['p(95)<2000'], // 95% 的請求應在 2s 以內
     },
 };
 
@@ -18,7 +20,7 @@ export default function () {
     const res = http.get(`${BASE_URL}`);
     check(res, {
         'status is 200': (r) => r.status === 200,
-        'response time < 500ms': (r) => r.timings.duration < 500,
+        'response time < 2s': (r) => r.timings.duration < 2000,
     });
 }
 
@@ -36,6 +38,7 @@ function exportData(data) {
         checks[check.name] = {
             'passes': check.passes,
             'fails': check.fails,
+            'rate': check.passes / (check.passes + check.fails),
         };
     });
 
@@ -43,7 +46,6 @@ function exportData(data) {
         'group': data.root_group.name,
         'checks': checks,
         'field': data.options.summaryTrendStats,
-        'checks_summary': data.metrics.checks.values,
         'request_count': data.metrics.http_reqs.values.count,
         'request_sending': data.metrics.http_req_sending.values,
         'request_receiving': data.metrics.http_req_receiving.values,

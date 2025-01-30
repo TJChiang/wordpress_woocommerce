@@ -51,6 +51,7 @@ services:
     command: run /scripts/stress_test.js
     environment:
       - BASE_URL=http://nginx/
+      # - BASE_URL=http://nginx/?post_type=product
     depends_on:
       - wordpress
 
