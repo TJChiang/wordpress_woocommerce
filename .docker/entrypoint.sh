@@ -22,4 +22,12 @@ if ! wp plugin is-installed woocommerce --allow-root; then
     wp plugin install woocommerce --activate --allow-root
 fi
 
+# 檢查 Redis Object Cache 插件是否已安裝，如果未安裝則安裝並啟用
+if ! wp plugin is-installed redis-cache --allow-root; then
+    wp plugin install redis-cache --activate --allow-root
+fi
+
+# 啟用 Redis Object Cache
+# wp redis enable --allow-root
+
 exec "$@"

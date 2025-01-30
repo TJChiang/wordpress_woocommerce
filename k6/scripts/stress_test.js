@@ -8,7 +8,7 @@ export const options = {
     //     { duration: '10s', target: 0 },
     // ],
     vus: 200,
-    duration: '1m',
+    duration: '60s',
     thresholds: {
         http_req_duration: ['p(95)<2000'], // 95% 的請求應在 2s 以內
     },
@@ -47,6 +47,7 @@ function exportData(data) {
         'checks': checks,
         'field': data.options.summaryTrendStats,
         'request_count': data.metrics.http_reqs.values.count,
+        'rps': data.metrics.http_reqs.values.count / 60,
         'request_sending': data.metrics.http_req_sending.values,
         'request_receiving': data.metrics.http_req_receiving.values,
         'request_waiting': data.metrics.http_req_waiting.values,

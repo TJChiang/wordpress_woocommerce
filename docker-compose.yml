@@ -42,6 +42,14 @@ services:
     volumes:
       - wordpress_woocommerce_mysql_data:/var/lib/mysql
 
+  redis:
+    image: redis:7.2
+    container_name: wordpress_redis
+    platform: linux/arm64
+    restart: always
+    ports:
+      - "${REDIS_PORT}:6379"
+
   k6:
     image: grafana/k6
     container_name: wordpress_k6
