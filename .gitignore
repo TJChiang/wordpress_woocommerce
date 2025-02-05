@@ -1,4 +1,5 @@
 /k6/logs
+/nginx/fastcgi
 html
 .env
 qiz.md
