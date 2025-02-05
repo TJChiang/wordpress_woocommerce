@@ -60,6 +60,7 @@ docker compose up -d
 ```
 
 ### 手動步驟
+
 1. 啟動 Docker 服務
 
     ```bash
@@ -80,3 +81,48 @@ docker compose up -d
     ```bash
     wp plugin install woocommerce --activate --allow-root
     ```
+
+- **啟用 Redis Object Cache**
+
+    - 在 `entrypoint.sh` 安裝並啟用 plugin
+    - 在 `wp-config.php` 新增以下程式碼，並重啟 container
+    ```
+    define('WP_REDIS_HOST', 'redis');
+    define('WP_REDIS_PORT', '6379');
+    ```
+
+- **移除 Redis Object Cache**
+
+    - 移除 `wp-content/object-cache.php` 檔案
+    - 在 `entrypoint.sh` 移除 plugin
+    - redis-cli 清除快取資料
+    - 在 `wp-config.php` 註解以下程式碼，並重啟 container
+    ```
+    // define('WP_REDIS_HOST', 'redis');
+    // define('WP_REDIS_PORT', '6379');
+    ```
+
+- **nginx 啟用 FastCGI cache**
+
+    - `./nginx/default.conf` 移除所有註解
+    - `docker-compose.yml` 移除註解
+    ```yml
+    volumes:
+        - ./html:/var/www/html
+        - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+        - ./nginx/fastcgi:/var/cache/nginx/fastcgi # 啟用 fastcgi cache
+    ```
+    - 重新啟動
+
+- **nginx 停用 FastCGI cache**
+
+    - `./nginx/default.conf` 註解 FastCGI cache 相關設定
+    - `docker-compose.yml` 加上註解
+    ```yml
+    volumes:
+        - ./html:/var/www/html
+        - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+        # - ./nginx/fastcgi:/var/cache/nginx/fastcgi # 啟用 fastcgi cache
+    ```
+    - 移除 `./nginx/fastcgi`
+    - 重新啟動

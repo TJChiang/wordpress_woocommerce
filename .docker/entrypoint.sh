@@ -27,6 +27,8 @@ if ! wp plugin is-installed redis-cache --allow-root; then
     wp plugin install redis-cache --activate --allow-root
 fi
 
+# wp plugin uninstall redis-cache --deactivate --allow-root
+
 # 啟用 Redis Object Cache
 # wp redis enable --allow-root
 
